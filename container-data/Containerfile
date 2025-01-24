@@ -1,0 +1,42 @@
+FROM rouhim/steamcmd:latest
+USER $USER
+
+USER root
+
+# Install dependencies
+RUN apt update && \
+    apt upgrade -y && \
+    apt install -y curl libcurl4 xdg-user-dirs
+
+# Install envini
+RUN LATEST_VERSION=$(curl -L -s -H 'Accept: application/json' https://github.com/RouHim/envini/releases/latest | \
+    sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/') && \
+    curl -L -o $USER_HOME/envini https://github.com/RouHim/envini/releases/download/$LATEST_VERSION/envini-$LATEST_VERSION-x86_64 && \
+    chmod +x $USER_HOME/envini && \
+    chown $USER:$USER $USER_HOME/envini
+
+# Remove curl
+RUN apt remove -y curl
+
+# Disable apt package manager
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+USER $USER
+COPY --chown=$USER:$USER envini_mapping.ini $USER_HOME/envini_mapping.ini
+
+ENV STEAM_APP_ID="581330"
+ENV STARTUP_COMMAND='Insurgency/Binaries/Linux/InsurgencyServer-Linux-Shipping $MAP?Scenario=$SCENARIO?MaxPlayers=$MAX_PLAYERS -Port=27102 -QueryPort=27131 -log -hostname="$SERVER_NAME" -Mods -mutators="$MUTATORS" -ModDownloadTravelTo=$MOD_DOWNLOAD_TRAVEL_TO'
+
+# Copy Game.ini, Engine.ini, GameUserSettings.ini to templates folder
+RUN mkdir -p $USER_HOME/templates
+COPY --chown=$USER:$USER Game.ini $USER_HOME/templates/Game.ini
+COPY --chown=$USER:$USER Engine.ini $USER_HOME/templates/Engine.ini
+COPY --chown=$USER:$USER GameUserSettings.ini $USER_HOME/templates/GameUserSettings.ini
+
+# expose game and query port
+EXPOSE 27102/tcp \
+       27102/udp \
+       27131/tcp \
+       27131/udp
+
+COPY --chown=$USER:$USER pre.sh $USER_HOME/pre.sh

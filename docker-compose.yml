@@ -1,0 +1,30 @@
+services:
+  ismc-mod-server-server:
+    image: rouhim/ismc-mod-server-server
+    build:
+      context: container-data
+      dockerfile: Containerfile
+    restart: unless-stopped
+    environment:
+      FAST_BOOT: "false"
+      SERVER_NAME: "My ISMC Server"
+      MAP: "Farmhouse"
+      SCENARIO: "Scenario_Farmhouse_Checkpoint_Security"
+      MAX_PLAYERS: "28"
+      MUTATORS: "ISMCarmory,ISMCJumpShoot"
+      MODS: "150867,167049"
+      MOD_IO_ACCESS_TOKEN: "O9si6HPQMDjUldBPPvvK2ELmxMkPcmZiKxEOQEOO"
+      MESSAGE_OF_THE_DAY: "Have fun on the ISMC Hardcore server"
+      ADMINS: "76561198009247258"
+      MOD_DOWNLOAD_TRAVEL_TO: "Scenario_Farmhouse_Checkpoint_Security"
+    volumes:
+      - "./data:/data"
+    ports:
+      - "27102:27102/udp"
+      - "27102:27102/tcp"
+      - "27131:27131/udp"
+      - "27131:27131/tcp"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
